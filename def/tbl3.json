@@ -1,0 +1,14 @@
+{
+  "select": [
+    "t3.order_id",
+    "t3.customer_name",
+    "t3.total_amount",
+    "t3.date"
+  ],
+  "from": {
+    "t_name": "tbl3",
+    "as": "t3"
+  },
+  "join": [],
+  "where": "t3.order_id='O003'"
+}

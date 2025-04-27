@@ -1,0 +1,14 @@
+{
+  "select": [
+    "t2.product_id",
+    "t2.product_name",
+    "t2.price",
+    "t2.quantity"
+  ],
+  "from": {
+    "t_name": "tbl2",
+    "as": "t2"
+  },
+  "join": [],
+  "where": "t2.product_id='P002'"
+}

@@ -1,0 +1,4 @@
+order_id,customer_name,total_amount,date
+O001,Alice,2500,2025-04-20
+O002,Bob,1500,2025-04-21
+O003,Charlie,3000,2025-04-22
