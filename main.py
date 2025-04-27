@@ -84,6 +84,7 @@ def process_query(json_data, src_folder_path, quote_type):
     # join
     joins = json_data.get("join", [])
     for join in joins:
+        join_type = join.get("join", "inner").lower()  # joinタイプ取得、デフォルトはinner
         join_table = join.get("t_name")
         join_alias = join.get("as")
         join_on = join.get("on")
@@ -93,7 +94,7 @@ def process_query(json_data, src_folder_path, quote_type):
             return
         df_join = pd.read_csv(join_csv)
         df_join = df_join.rename(columns={col: f"{join_alias}_{col}" for col in df_join.columns})
-        table_alias[join_alias] = df_join  # aliasに紐づける
+        table_alias[join_alias] = df_join
 
         # 結合
         left_key, right_key = map(str.strip, join_on.split("="))
@@ -106,14 +107,30 @@ def process_query(json_data, src_folder_path, quote_type):
         df_left = table_alias[left_table_alias]
         df_right = table_alias[right_table_alias]
 
+        # JOINタイプに応じた結合
+        if join_type in ("outer", "left", "right", "inner"):
+            how_type = join_type
+        else:
+            print(f"未知のjoinタイプです: {join_type}")
+            return
+        print("■■■" + join_type)
+        # 結合前のデータフレームの内容を表示
+        print("左テーブル（df_left）の内容:")
+        print(df_left.head())  # head()で最初の数行を表示
+        print("右テーブル（df_right）の内容:")
+        print(df_right.head())  # head()で最初の数行を表示
         df_merged = pd.merge(
             df_left, df_right,
             left_on=left_column_renamed,
             right_on=right_column_renamed,
-            how='inner'
+            how=how_type
         )
-        table_alias[left_table_alias] = df_merged  # 左テーブル側を更新（積み重ね）
+        # 結合後のデータを表示
+        # print("結合後の結果（df_merged）:")
+        # print(df_merged.head())  # ここでデータの最初の数行を表示
+        table_alias[left_table_alias] = df_merged
 
+    result_df = list(table_alias.values())[0]
     # 全部のJOIN後の結果
     result_df = list(table_alias.values())[0]
 
@@ -130,12 +147,14 @@ def process_query(json_data, src_folder_path, quote_type):
 
     if "select" in json_data:
         for col in json_data["select"]:
-            if ' as ' in col:
-                c_name = col.split(' as ')[0].strip()  # 元のカラム名
-                c_alias = col.split(' as ')[-1].strip()  # 別名（エイリアス）
+            match = re.search(r'\s+as\s+', col, re.IGNORECASE)
+            if match:
+                c_name, c_alias = re.split(r'\s+as\s+', col, flags=re.IGNORECASE)
+                c_name = c_name.strip()
+                c_alias = c_alias.strip()
             else:
                 c_name = col.strip()
-                c_alias = col.strip()  # 別名がない場合、元のカラム名をそのまま使用
+                c_alias = col.strip()
 
             dst_c_name.append(c_name)
             dst_c_alias.append(c_alias)
@@ -162,19 +181,20 @@ def process_query(json_data, src_folder_path, quote_type):
         print(f"警告: dst_c_alias の長さ {len(dst_c_alias)} と result_df のカラム数 {len(result_df.columns)} が一致しません")
 
     # 出力
-    print("クエリ結果:")
+    print("■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■")
+    print("クエリ結果: " + from_table)
     pd.set_option("display.max_columns", None)  # 全てのカラムを表示
     pd.set_option("display.width", None)  # 横幅の制限をなくす
     pd.set_option("display.max_rows", None)  # 行数の制限をなくす
     print(result_df)
 
     # 出力先のディレクトリが存在しない場合は作成
-    output_dir = "./csvquery/dst/"
+    output_dir = "./dst/"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
     # カンマ区切りでCSVとして出力
-    output_csv_path = output_dir + "query_result.csv"
+    output_csv_path = output_dir + from_table + ".csv"
     result_df.to_csv(output_csv_path, sep=',', index=False, quotechar='"', quoting=1)  # 1 は CSV.QUOTE_MINIMAL 相当
 
 # WHERE句の条件変換
@@ -188,8 +208,8 @@ def convert_where_condition(where_condition):
     where_condition = where_condition.replace('__IS__', 'is')
     
     # AND, ORや()の表現に未対応
+    # print(where_condition)    
 
-    print(where_condition)    
     return where_condition
 
 # メイン処理
@@ -198,10 +218,13 @@ def main():
         print("引数が不足しています。ファイル名または'all'を指定してください。")
         sys.exit(1)
 
-    # 引数を取得
-    arg = sys.argv[1]
+    # 引数を取得してカンマで分割(複数CSV対応)
+    args = sys.argv[1].split(",")
+
     quote_type = '"'  # デフォルトはダブルクォート
-    process_files(arg, quote_type)
+    for arg in args:
+        arg = arg.strip()  # 念のため余分な空白を除去
+        process_files(arg, quote_type)
 
 if __name__ == '__main__':
     main()

@@ -2,3 +2,4 @@ id,name,age,email,product_id
 1,Alice,30,alice@example.com,P001
 2,Bob,25,bob@example.com,P001
 3,Charlie,35,charlie@example.com,P002
+4,David,28,david@example.com,P004

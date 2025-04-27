@@ -1,14 +1,21 @@
 {
   "select": [
-    "t2.product_id",
-    "t2.product_name",
-    "t2.price",
-    "t2.quantity"
+    "t2.product_id AS product_id",
+    "t2.product_name AS product_name",
+    "t2.price AS price",
+    "t2.quantity AS quantity"
   ],
   "from": {
     "t_name": "tbl2",
     "as": "t2"
   },
-  "join": [],
+  "join": [
+    {
+      "join": "OUTER",
+      "t_name": "tbl1",
+      "as": "t1",
+      "on": "t2.product_id=t1.product_id"
+    }
+  ],
   "where": "t2.product_id='P002'"
 }

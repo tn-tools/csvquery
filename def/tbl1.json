@@ -1,11 +1,11 @@
 {
   "select": [
     "t1.id as id",
-    "t1.name",
-    "t1.age" ,
-    "t1.email",
-    "t2.product_name",
-    "t3.total_amount"
+    "t1.name as name",
+    "t1.age as age" ,
+    "t1.email as email",
+    "t2.product_name as product_name",
+    "t3.total_amount as total_amount"
   ],
   "from": {
     "t_name": "tbl1",
@@ -13,11 +13,13 @@
   },
   "join": [
     {
+      "join": "left",
       "t_name": "tbl2",
       "as": "t2",
       "on": "t1.product_id=t2.product_id"
     },
     {
+      "join": "left",
       "t_name": "tbl3",
       "as": "t3",
       "on": "t1.name=t3.customer_name"
